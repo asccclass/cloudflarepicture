@@ -31,15 +31,17 @@
     CREATE TABLE media (
       url TEXT PRIMARY KEY,
       fileId TEXT,
-      "group" TEXT,
+      groupz TEXT,
       uploader TEXT
     );
     ```
     > [!IMPORTANT]
     > 如果你已經有現存的資料庫，請執行以下指令來新增欄位：
     > ```sql
-    > ALTER TABLE media ADD COLUMN "group" TEXT;
-    > ALTER TABLE media ADD COLUMN uploader TEXT;
+    > ALTER TABLE media RENAME COLUMN "group" TO groupz;
+    > -- 或者如果你是新增加欄位:
+    > -- ALTER TABLE media ADD COLUMN groupz TEXT;
+    > -- ALTER TABLE media ADD COLUMN uploader TEXT;
     > ```
 
 ### 3. 部署 Worker

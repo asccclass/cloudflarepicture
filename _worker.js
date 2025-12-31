@@ -506,7 +506,7 @@ function isValidCredentials(authHeader, USERNAME, PASSWORD) {
 
 async function generateAdminPage(DATABASE) {
   const mediaData = await fetchMediaData(DATABASE);
-  const mediaHtml = mediaData.map(({ url, group, uploader }) => {
+  const mediaHtml = mediaData.map(({ url, groupz, uploader }) => {
     const fileExtension = url.split('.').pop().toLowerCase();
     const timestamp = url.split('/').pop().split('.')[0];
     const mediaType = fileExtension;
@@ -527,7 +527,7 @@ async function generateAdminPage(DATABASE) {
       ` : `
         ${isSupported ? `<img class="gallery-image lazy" data-src="${displayUrl}" alt="Image">` : icon}
       `}
-      <div class="upload-time">上傳時間: ${new Date(parseInt(timestamp)).toLocaleString('zh-TW', { timeZone: 'Asia/Shanghai' })}<br>上傳者: ${uploader || '未知'}<br>分群: ${group || '默認'}</div>
+      <div class="upload-time">上傳時間: ${new Date(parseInt(timestamp)).toLocaleString('zh-TW', { timeZone: 'Asia/Shanghai' })}<br>上傳者: ${uploader || '未知'}<br>分群: ${groupz || '默認'}</div>
     </div>
     `;
   }).join('');
@@ -857,13 +857,13 @@ async function generateAdminPage(DATABASE) {
 }
 
 async function fetchMediaData(DATABASE) {
-  const result = await DATABASE.prepare('SELECT url, fileId, "group", uploader FROM media').all();
+  const result = await DATABASE.prepare('SELECT url, fileId, groupz, uploader FROM media').all();
   const mediaData = result.results.map(row => {
     const timestamp = parseInt(row.url.split('/').pop().split('.')[0]);
-    return { fileId: row.fileId, url: row.url, timestamp: timestamp, group: row.group, uploader: row.uploader };
+    return { fileId: row.fileId, url: row.url, timestamp: timestamp, groupz: row.groupz, uploader: row.uploader };
   });
   mediaData.sort((a, b) => b.timestamp - a.timestamp);
-  return mediaData.map(({ fileId, url, group, uploader }) => ({ fileId, url, group, uploader }));
+  return mediaData.map(({ fileId, url, groupz, uploader }) => ({ fileId, url, groupz, uploader }));
 }
 
 async function handleUploadRequest(request, DATABASE, enableAuth, USERNAME, PASSWORD, domain, TG_BOT_TOKEN, TG_CHAT_ID, maxSize) {
@@ -877,7 +877,7 @@ async function handleUploadRequest(request, DATABASE, enableAuth, USERNAME, PASS
     if (enableAuth && !authenticate(request, USERNAME, PASSWORD)) {
       return new Response('Unauthorized', { status: 401, headers: { 'WWW-Authenticate': 'Basic realm="Admin"' } });
     }
-    const group = formData.get('group') || 'default';
+    const groupz = formData.get('groupz') || 'default';
     const currentUploader = authenticate(request, USERNAME, PASSWORD) ? USERNAME : 'Guest';
     const uploadFormData = new FormData();
     uploadFormData.append("chat_id", TG_CHAT_ID);
@@ -902,7 +902,7 @@ async function handleUploadRequest(request, DATABASE, enableAuth, USERNAME, PASS
     const fileExtension = file.name.split('.').pop();
     const timestamp = Date.now();
     const imageURL = `https://${domain}/${timestamp}.${fileExtension}`;
-    await DATABASE.prepare('INSERT INTO media (url, fileId, "group", uploader) VALUES (?, ?, ?, ?) ON CONFLICT(url) DO NOTHING').bind(imageURL, fileId, group, currentUploader).run();
+    await DATABASE.prepare('INSERT INTO media (url, fileId, groupz, uploader) VALUES (?, ?, ?, ?) ON CONFLICT(url) DO NOTHING').bind(imageURL, fileId, groupz, currentUploader).run();
     return new Response(JSON.stringify({ data: imageURL }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('內部伺服器錯誤:', error);
